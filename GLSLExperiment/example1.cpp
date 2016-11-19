@@ -21,6 +21,12 @@ void drawCube(void);
 typedef Angel::vec4  color4;
 typedef Angel::vec4  point4;
 
+struct myTriangle {
+	int firstp;
+	int secondp;
+	int thirdp;
+} ;
+
 // handle to program
 GLuint program;
 
@@ -32,8 +38,7 @@ point4 points[NumVertices];
 color4 colors[NumVertices];
 
 vector<point4> filepoints;
-//vector<
-
+vector<myTriangle> filepolys;
 
 void readPLYFile(char * filename) {
 	std::ifstream file(filename);
@@ -75,19 +80,25 @@ void readPLYFile(char * filename) {
 	}
 	for (int i = 0; i < numPolys; i++) {
 		getline(file, str, ' ');
-		float numV = stof(str);
+		int numV = stoi(str);
 		getline(file, str, ' ');
-		float v1 = stof(str);
+		int v1 = stoi(str);
 		getline(file, str, ' ');
-		float v2 = stof(str);
+		int v2 = stoi(str);
 		getline(file, str, ' ');
-		float v3 = stof(str);
-		//filepoints.push_back(point4(v1, v2, v3));
+		int v3 = stoi(str);
+		myTriangle curTri;
+		curTri.firstp = v1;
+		curTri.secondp = v2;
+		curTri.thirdp = v3;
+		filepolys.push_back(curTri);
 	}
-	//cout << filepoints << endl;
 	/*for (int i = 0; i < numVerts; i++) {
 		cout << filepoints[i] << endl;
 	}*/
+	for (int i = 0; i < numPolys; i++) {
+	cout << filepolys[i].firstp << ", " << filepolys[i].secondp << ", " << filepolys[i].thirdp << endl;
+	}
 }
 // Vertices of a unit cube centered at origin, sides aligned with axes
 point4 vertices[8] = {
@@ -137,6 +148,8 @@ void colorcube()
 
 void generateGeometry( void )
 {	
+	// make function to go in here if it doesn't display try scaling ortho
+	// generate giant array or use glelements
     colorcube();
 
     // Create a vertex array object
