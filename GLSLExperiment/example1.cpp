@@ -1,7 +1,10 @@
 // Draws colored cube  
 
 #include "Angel.h"
-
+#include <fstream>
+#include <cstdlib>
+#include <string>
+#include <vector>
 
 //----------------------------------------------------------------------------
 int width = 0;
@@ -28,6 +31,64 @@ const int NumVertices = 36; //(6 faces)(2 triangles/face)(3 vertices/triangle)
 point4 points[NumVertices];
 color4 colors[NumVertices];
 
+vector<point4> filepoints;
+//vector<
+
+
+void readPLYFile(char * filename) {
+	std::ifstream file(filename);
+	if (file.fail()) {
+		cout << "Failed to open file!" << std::endl;
+	}
+	string str;
+	getline(file, str);
+	if (str != "ply") {     // first line
+		exit(EXIT_FAILURE);
+	}
+	getline(file, str); // ignore second line 
+	getline(file, str, ' ');  // ignore first two space separated strings
+	getline(file, str, ' ');
+	int numVerts;
+	getline(file, str, ' ');
+	numVerts = stoi(str);
+	cout << "numVerts: " << numVerts << endl;
+	getline(file, str); // ignore next three line
+	getline(file, str); 
+	getline(file, str);
+	getline(file, str, ' ');  // ignore first two space separated strings
+	getline(file, str, ' ');
+	int numPolys;
+	getline(file, str, ' ');
+	numPolys = stoi(str);
+	cout << "numPolys: " << numPolys << endl;
+	getline(file, str); // skip two lines
+	getline(file, str);
+	float fourth = 1.0;
+	for (int i = 0; i < numVerts; i++) {
+		getline(file, str, ' ');
+		float x = stof(str);
+		getline(file, str, ' ');
+		float y = stof(str);
+		getline(file, str, ' ');
+		float z = stof(str);
+		filepoints.push_back(point4(x, y, z, fourth));
+	}
+	for (int i = 0; i < numPolys; i++) {
+		getline(file, str, ' ');
+		float numV = stof(str);
+		getline(file, str, ' ');
+		float v1 = stof(str);
+		getline(file, str, ' ');
+		float v2 = stof(str);
+		getline(file, str, ' ');
+		float v3 = stof(str);
+		//filepoints.push_back(point4(v1, v2, v3));
+	}
+	//cout << filepoints << endl;
+	/*for (int i = 0; i < numVerts; i++) {
+		cout << filepoints[i] << endl;
+	}*/
+}
 // Vertices of a unit cube centered at origin, sides aligned with axes
 point4 vertices[8] = {
     point4( -0.5, -0.5,  0.5, 1.0 ),
@@ -158,20 +219,10 @@ void display( void )
 	
 	Angel::mat4 modelMat = Angel::identity();
 	modelMat = modelMat * Angel::Translate(0.0, 0.0, -2.0f) * Angel::RotateY(45.0f) * Angel::RotateX(35.0f);
-	float modelMatrixf[16];
-	modelMatrixf[0] = modelMat[0][0];modelMatrixf[4] = modelMat[0][1];
-	modelMatrixf[1] = modelMat[1][0];modelMatrixf[5] = modelMat[1][1];
-	modelMatrixf[2] = modelMat[2][0];modelMatrixf[6] = modelMat[2][1];
-	modelMatrixf[3] = modelMat[3][0];modelMatrixf[7] = modelMat[3][1];
-
-	modelMatrixf[8] = modelMat[0][2];modelMatrixf[12] = modelMat[0][3];
-	modelMatrixf[9] = modelMat[1][2];modelMatrixf[13] = modelMat[1][3];
-	modelMatrixf[10] = modelMat[2][2];modelMatrixf[14] = modelMat[2][3];
-	modelMatrixf[11] = modelMat[3][2];modelMatrixf[15] = modelMat[3][3];
 	
 	// set up projection matricies
 	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
-	glUniformMatrix4fv( modelMatrix, 1, GL_FALSE, modelMatrixf );
+	glUniformMatrix4fv( modelMatrix, 1, GL_TRUE, modelMat );
 	GLuint viewMatrix = glGetUniformLocationARB(program, "projection_matrix");
 	glUniformMatrix4fv( viewMatrix, 1, GL_FALSE, viewMatrixf);
 
@@ -213,6 +264,7 @@ int main( int argc, char **argv )
 	// init glew
     glewInit();
 
+	readPLYFile("airplane.ply");
     generateGeometry();
 
 	// assign handlers
