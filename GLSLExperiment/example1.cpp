@@ -49,8 +49,8 @@ float filemaxZ = neginfinity;
 float fileminX = infinity;
 float fileminY = infinity;
 float fileminZ = infinity;
-float numfilev = 0;
-float numfilei = 0;
+int numfilev = 0;
+int numfilei = 0;
 vector<point4> hugepoints;
 vector<point4> hugecolors;
 
@@ -237,8 +237,8 @@ void readPLYFile(char * filename) {
 	/*for (int i = 0; i < numPolys; i++) {
 	cout << filepolys[i].firstp << ", " << filepolys[i].secondp << ", " << filepolys[i].thirdp << endl;
 	}*/
-	//cout << fileminX << ", " << fileminY << ", " << fileminZ << endl;
-	//cout << filemaxX << ", " << filemaxY << ", " << filemaxZ << endl;
+	cout << fileminX << ", " << fileminY << ", " << fileminZ << endl;
+	cout << filemaxX << ", " << filemaxY << ", " << filemaxZ << endl;
 }
 
 void generateFileGeometry(void)
@@ -314,7 +314,7 @@ void drawFile(void)
 	//glDrawArrays(GL_TRIANGLES, 0, hugepoints.size());
 
 	// Way two
-	glDrawElements(GL_TRIANGLES, sizeof(fileindices),GL_UNSIGNED_INT, fileindices.data());
+	glDrawElements(GL_TRIANGLES, fileindices.size(), GL_UNSIGNED_INT, nullptr); // fileindices.data());
 	glDisable(GL_DEPTH_TEST);
 }
 
