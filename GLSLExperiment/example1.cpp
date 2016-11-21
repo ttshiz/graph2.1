@@ -39,67 +39,23 @@ color4 colors[NumVertices];
 
 vector<point4> filepoints;
 vector<myTriangle> filepolys;
+vector<unsigned int> fileindices;
+vector<color4> filecolors;
+float filemaxX = 0;
+float filemaxY = 0;
+float filemaxZ = 0;
 
-void readPLYFile(char * filename) {
-	std::ifstream file(filename);
-	if (file.fail()) {
-		cout << "Failed to open file!" << std::endl;
-	}
-	string str;
-	getline(file, str);
-	if (str != "ply") {     // first line
-		exit(EXIT_FAILURE);
-	}
-	getline(file, str); // ignore second line 
-	getline(file, str, ' ');  // ignore first two space separated strings
-	getline(file, str, ' ');
-	int numVerts;
-	getline(file, str, ' ');
-	numVerts = stoi(str);
-	cout << "numVerts: " << numVerts << endl;
-	getline(file, str); // ignore next three line
-	getline(file, str); 
-	getline(file, str);
-	getline(file, str, ' ');  // ignore first two space separated strings
-	getline(file, str, ' ');
-	int numPolys;
-	getline(file, str, ' ');
-	numPolys = stoi(str);
-	cout << "numPolys: " << numPolys << endl;
-	getline(file, str); // skip two lines
-	getline(file, str);
-	float fourth = 1.0;
-	for (int i = 0; i < numVerts; i++) {
-		getline(file, str, ' ');
-		float x = stof(str);
-		getline(file, str, ' ');
-		float y = stof(str);
-		getline(file, str, ' ');
-		float z = stof(str);
-		filepoints.push_back(point4(x, y, z, fourth));
-	}
-	for (int i = 0; i < numPolys; i++) {
-		getline(file, str, ' ');
-		int numV = stoi(str);
-		getline(file, str, ' ');
-		int v1 = stoi(str);
-		getline(file, str, ' ');
-		int v2 = stoi(str);
-		getline(file, str, ' ');
-		int v3 = stoi(str);
-		myTriangle curTri;
-		curTri.firstp = v1;
-		curTri.secondp = v2;
-		curTri.thirdp = v3;
-		filepolys.push_back(curTri);
-	}
-	/*for (int i = 0; i < numVerts; i++) {
-		cout << filepoints[i] << endl;
-	}*/
-	for (int i = 0; i < numPolys; i++) {
-	cout << filepolys[i].firstp << ", " << filepolys[i].secondp << ", " << filepolys[i].thirdp << endl;
-	}
-}
+char* plyfiles[43] = {
+	"airplane.ply", "ant.ply", "apple.ply", "balance.ply", "beethoven.ply",
+	"big_atc.ply", "big_dodge.ply", "big_porsche.ply", "big_spider.ply", "canstick.ply",
+	"chopper.ply", "cow.ply", "dolphins.ply", "egret.ply", "f16.ply", 
+	"footbones.ply", "fracttree.ply", "galleon.ply", "hammerhead.ply", "helix.ply",
+	"hind.ply", "kerolamp.ply", "ketchup.ply", "mug.ply", "part.ply",
+	"pickup_big.ply", "pump.ply", "pumpa_tb.ply", "sandal.ply", "saratoga.ply",
+	"scissors.ply", "shark.ply", "steeringweel.ply", "stratocaster.ply", "street_lamp.ply",
+	"teapot.ply", "tennis_shoe.ply", "tommygun.ply", "trashcan.ply", "turbine.ply",
+	"urn2.ply", "walkman.ply", "weathervane.ply"
+};
 // Vertices of a unit cube centered at origin, sides aligned with axes
 point4 vertices[8] = {
     point4( -0.5, -0.5,  0.5, 1.0 ),
@@ -150,7 +106,7 @@ void generateGeometry( void )
 {	
 	// make function to go in here if it doesn't display try scaling ortho
 	// generate giant array or use glelements
-    colorcube();
+	colorcube();
 
     // Create a vertex array object
     GLuint vao;
@@ -185,6 +141,181 @@ void generateGeometry( void )
     glClearColor( 1.0, 1.0, 1.0, 1.0 ); // white background
 }
 
+void readPLYFile(char * filename) {
+	std::ifstream file(filename);
+	if (file.fail()) {
+		cout << "Failed to open file!" << std::endl;
+	}
+	string str;
+	getline(file, str);
+	if (str != "ply") {     // first line
+		exit(EXIT_FAILURE);
+	}
+	getline(file, str); // ignore second line 
+	getline(file, str, ' ');  // ignore first two space separated strings
+	getline(file, str, ' ');
+	int numVerts;
+	getline(file, str, ' ');
+	numVerts = stoi(str);
+	cout << "numVerts: " << numVerts << endl;
+	getline(file, str); // ignore next three line
+	getline(file, str);
+	getline(file, str);
+	getline(file, str, ' ');  // ignore first two space separated strings
+	getline(file, str, ' ');
+	int numPolys;
+	getline(file, str, ' ');
+	numPolys = stoi(str);
+	cout << "numPolys: " << numPolys << endl;
+	getline(file, str); // skip two lines
+	getline(file, str);
+	color4 mycolor = vertex_colors[0];
+	float fourth = 1.0;
+	for (int i = 0; i < numVerts; i++) {
+		getline(file, str, ' ');
+		float x = stof(str);
+		getline(file, str, ' ');
+		float y = stof(str);
+		getline(file, str, ' ');
+		float z = stof(str);
+		filepoints.push_back(point4(x, y, z, fourth));
+		filecolors.push_back(mycolor);
+		if (filemaxX < x) {
+			filemaxX = x;
+		}
+		if (filemaxY < y) {
+			filemaxY = y;
+		}
+		if (filemaxZ < z) {
+			filemaxZ = z;
+		}
+	}
+	for (int i = 0; i < numPolys; i++) {
+		getline(file, str, ' ');
+		int numV = stoi(str);
+		getline(file, str, ' ');
+		int v1 = stoi(str);
+		getline(file, str, ' ');
+		int v2 = stoi(str);
+		getline(file, str, ' ');
+		int v3 = stoi(str);
+		myTriangle curTri;
+		curTri.firstp = v1;
+		curTri.secondp = v2;
+		curTri.thirdp = v3;
+		filepolys.push_back(curTri);
+		fileindices.push_back(v1);
+		fileindices.push_back(v2);
+		fileindices.push_back(v3);
+	}
+	/*for (int i = 0; i < numVerts; i++) {
+	cout << filepoints[i] << endl;
+	}*/
+	/*for (int i = 0; i < numPolys; i++) {
+	cout << filepolys[i].firstp << ", " << filepolys[i].secondp << ", " << filepolys[i].thirdp << endl;
+	}*/
+}
+
+void generateFileGeometry(void)
+{
+	// make function to go in here if it doesn't display try scaling ortho
+	// generate giant array or use glelements
+	readPLYFile(plyfiles[0]);
+
+	// Create a vertex array object
+	GLuint vao;
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	// Create and initialize a buffer object
+	GLuint buffer;
+	glGenBuffers(1, &buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, buffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(filepoints) + sizeof(filecolors), NULL, GL_STATIC_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(filepoints), filepoints.data());
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(filepoints), sizeof(filecolors), filecolors.data());
+
+
+	// Load shaders and use the resulting shader program
+	program = InitShader("vshader1.glsl", "fshader1.glsl");
+	glUseProgram(program);
+	// set up vertex arrays
+	GLuint vPosition = glGetAttribLocation(program, "vPosition");
+	glEnableVertexAttribArray(vPosition);
+	glVertexAttribPointer(vPosition, 4, GL_FLOAT, GL_FALSE, 0,
+		BUFFER_OFFSET(0));
+
+	GLuint vColor = glGetAttribLocation(program, "vColor");
+	glEnableVertexAttribArray(vColor);
+	glVertexAttribPointer(vColor, 4, GL_FLOAT, GL_FALSE, 0,
+		BUFFER_OFFSET(sizeof(filepoints)));
+
+	// sets the default color to clear screen
+	glClearColor(1.0, 1.0, 1.0, 1.0); // white background
+}
+
+void drawFile(void)
+{
+	// change to GL_FILL
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	// draw functions should enable then disable the features 
+	// that are specifit the themselves
+	// the depth is disabled after the draw 
+	// in case you need to draw overlays
+	glEnable(GL_DEPTH_TEST);
+	glDrawElements(GL_TRIANGLES, sizeof(fileindices),GL_UNSIGNED_INT, fileindices.data());
+	glDisable(GL_DEPTH_TEST);
+}
+
+//----------------------------------------------------------------------------
+// this is where the drawing should happen
+void mydisplay(void)
+{
+	// SOME RANDOM TIPS
+	//========================================================================
+	// remember to enable depth buffering when drawing in 3d
+
+	// avoid using glTranslatex, glRotatex, push and pop
+	// pass your own view matrix to the shader directly
+	// refer to the latest OpenGL documentation for implementation details
+
+	// Do not set the near and far plane too far appart!
+	// depth buffers do not have unlimited resolution
+	// surfaces will start to fight as they come nearer to each other
+	// if the planes are too far appart (quantization errors :(   )
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);     // clear the window
+
+	Angel::mat4 perspectiveMat = Angel::Perspective((GLfloat)45.0, (GLfloat)width / (GLfloat)height, (GLfloat)0.1, (GLfloat) 100.0);
+
+	float viewMatrixf[16];
+	viewMatrixf[0] = perspectiveMat[0][0]; viewMatrixf[4] = perspectiveMat[0][1];
+	viewMatrixf[1] = perspectiveMat[1][0]; viewMatrixf[5] = perspectiveMat[1][1];
+	viewMatrixf[2] = perspectiveMat[2][0]; viewMatrixf[6] = perspectiveMat[2][1];
+	viewMatrixf[3] = perspectiveMat[3][0]; viewMatrixf[7] = perspectiveMat[3][1];
+
+	viewMatrixf[8] = perspectiveMat[0][2]; viewMatrixf[12] = perspectiveMat[0][3];
+	viewMatrixf[9] = perspectiveMat[1][2]; viewMatrixf[13] = perspectiveMat[1][3];
+	viewMatrixf[10] = perspectiveMat[2][2]; viewMatrixf[14] = perspectiveMat[2][3];
+	viewMatrixf[11] = perspectiveMat[3][2]; viewMatrixf[15] = perspectiveMat[3][3];
+
+	Angel::mat4 modelMat = Angel::identity();
+	modelMat = modelMat * Angel::Translate(0.0, 0.0, -2.0f) * Angel::RotateY(45.0f) * Angel::RotateX(35.0f);
+
+	// set up projection matricies
+	GLuint modelMatrix = glGetUniformLocationARB(program, "model_matrix");
+	glUniformMatrix4fv(modelMatrix, 1, GL_TRUE, modelMat);
+	GLuint viewMatrix = glGetUniformLocationARB(program, "projection_matrix");
+	glUniformMatrix4fv(viewMatrix, 1, GL_FALSE, viewMatrixf);
+
+	drawFile();
+	glFlush(); // force output to graphics hardware
+
+			   // use this call to double buffer
+	glutSwapBuffers();
+	// you can implement your own buffers with textures
+}
+
 void drawCube(void)
 {
 	// change to GL_FILL
@@ -197,6 +328,7 @@ void drawCube(void)
     glDrawArrays( GL_TRIANGLES, 0, NumVertices );
 	glDisable( GL_DEPTH_TEST ); 
 }
+
 
 //----------------------------------------------------------------------------
 // this is where the drawing should happen
@@ -277,11 +409,11 @@ int main( int argc, char **argv )
 	// init glew
     glewInit();
 
-	readPLYFile("airplane.ply");
-    generateGeometry();
+	generateFileGeometry();
+    //generateGeometry();
 
 	// assign handlers
-    glutDisplayFunc( display );
+    glutDisplayFunc( mydisplay );
     glutKeyboardFunc( keyboard );
 	// should add menus
 	// add mouse handler
