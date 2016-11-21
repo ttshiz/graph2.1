@@ -49,6 +49,10 @@ float filemaxZ = neginfinity;
 float fileminX = infinity;
 float fileminY = infinity;
 float fileminZ = infinity;
+float numfilev = 0;
+float numfilei = 0;
+vector<point4> hugepoints;
+vector<point4> hugecolors;
 
 char* plyfiles[43] = {
 	"airplane.ply", "ant.ply", "apple.ply", "balance.ply", "beethoven.ply",
@@ -176,6 +180,9 @@ void readPLYFile(char * filename) {
 	getline(file, str);
 	color4 mycolor = vertex_colors[0];
 	float fourth = 1.0;
+	numfilev = numVerts;
+	numfilei = numPolys;
+	//cout << "size of file indeces before " << fileindices.size() << endl;
 	for (int i = 0; i < numVerts; i++) {
 		getline(file, str, ' ');
 		float x = stof(str);
@@ -222,6 +229,8 @@ void readPLYFile(char * filename) {
 		fileindices.push_back(v2);
 		fileindices.push_back(v3);
 	}
+
+	//cout << "size of file indeces after " << fileindices.size() << endl;
 	/*for (int i = 0; i < numVerts; i++) {
 	cout << filepoints[i] << endl;
 	}*/
@@ -237,6 +246,14 @@ void generateFileGeometry(void)
 	// make function to go in here if it doesn't display try scaling ortho
 	// generate giant array or use glelements
 	readPLYFile(plyfiles[0]);
+
+	// Way one
+	//for (int i = 0; i < sizeof(fileindices); i++) {
+	//	//cout << sizeof(fileindices) << endl;
+	//	hugepoints.push_back(filepoints[fileindices[i]]);
+	//}
+	//// Way two
+	/**/
 	mat4 ortho = Ortho(fileminX, filemaxX, fileminY, filemaxY, filemaxZ, fileminZ);
 	GLuint ProjLoc = glGetUniformLocation(program, "Proj");
 	glUniformMatrix4fv(ProjLoc, 1, GL_TRUE, ortho);
@@ -249,9 +266,16 @@ void generateFileGeometry(void)
 	GLuint buffer;
 	glGenBuffers(1, &buffer);
 	glBindBuffer(GL_ARRAY_BUFFER, buffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(filepoints) + sizeof(filecolors), NULL, GL_STATIC_DRAW);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(filepoints), filepoints.data());
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(filepoints), sizeof(filecolors), filecolors.data());
+
+	// Way one
+	/*glBufferData(GL_ARRAY_BUFFER, hugepoints.size() * sizeof(point4) + hugecolors.size() * sizeof(color4), NULL, GL_STATIC_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, hugepoints.size() * sizeof(point4), hugepoints.data());
+	glBufferSubData(GL_ARRAY_BUFFER, hugepoints.size() * sizeof(point4), hugecolors.size() * sizeof(color4), hugecolors.data());
+	*/
+	// Way two
+	glBufferData(GL_ARRAY_BUFFER, filepoints.size()*sizeof(point4) + filecolors.size()*sizeof(color4), NULL, GL_STATIC_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, filepoints.size()*sizeof(point4), filepoints.data());
+	glBufferSubData(GL_ARRAY_BUFFER, filepoints.size()*sizeof(point4), filecolors.size()*sizeof(color4), filecolors.data());
 
 	GLuint elementbuffer;
 	glGenBuffers(1, &elementbuffer);
@@ -270,7 +294,7 @@ void generateFileGeometry(void)
 	GLuint vColor = glGetAttribLocation(program, "vColor");
 	glEnableVertexAttribArray(vColor);
 	glVertexAttribPointer(vColor, 4, GL_FLOAT, GL_FALSE, 0,
-		BUFFER_OFFSET(sizeof(filepoints)));
+		BUFFER_OFFSET(filepoints.size()*sizeof(point4)));
 
 	// sets the default color to clear screen
 	glClearColor(1.0, 1.0, 1.0, 1.0); // white background
@@ -285,6 +309,11 @@ void drawFile(void)
 	// the depth is disabled after the draw 
 	// in case you need to draw overlays
 	glEnable(GL_DEPTH_TEST);
+
+	// Way one
+	//glDrawArrays(GL_TRIANGLES, 0, hugepoints.size());
+
+	// Way two
 	glDrawElements(GL_TRIANGLES, sizeof(fileindices),GL_UNSIGNED_INT, fileindices.data());
 	glDisable(GL_DEPTH_TEST);
 }
