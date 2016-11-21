@@ -41,9 +41,14 @@ vector<point4> filepoints;
 vector<myTriangle> filepolys;
 vector<unsigned int> fileindices;
 vector<color4> filecolors;
-float filemaxX = 0;
-float filemaxY = 0;
-float filemaxZ = 0;
+float infinity = numeric_limits<float>::infinity();
+float neginfinity = -1 * infinity;
+float filemaxX = neginfinity;
+float filemaxY = neginfinity;
+float filemaxZ = neginfinity;
+float fileminX = infinity;
+float fileminY = infinity;
+float fileminZ = infinity;
 
 char* plyfiles[43] = {
 	"airplane.ply", "ant.ply", "apple.ply", "balance.ply", "beethoven.ply",
@@ -157,7 +162,7 @@ void readPLYFile(char * filename) {
 	int numVerts;
 	getline(file, str, ' ');
 	numVerts = stoi(str);
-	cout << "numVerts: " << numVerts << endl;
+	//cout << "numVerts: " << numVerts << endl;
 	getline(file, str); // ignore next three line
 	getline(file, str);
 	getline(file, str);
@@ -166,7 +171,7 @@ void readPLYFile(char * filename) {
 	int numPolys;
 	getline(file, str, ' ');
 	numPolys = stoi(str);
-	cout << "numPolys: " << numPolys << endl;
+	//cout << "numPolys: " << numPolys << endl;
 	getline(file, str); // skip two lines
 	getline(file, str);
 	color4 mycolor = vertex_colors[0];
@@ -188,6 +193,15 @@ void readPLYFile(char * filename) {
 		}
 		if (filemaxZ < z) {
 			filemaxZ = z;
+		}
+		if (fileminX > x) {
+			fileminX = x;
+		}
+		if (fileminY > y) {
+			fileminY = y;
+		}
+		if (fileminZ > z) {
+			fileminZ = z;
 		}
 	}
 	for (int i = 0; i < numPolys; i++) {
@@ -214,6 +228,8 @@ void readPLYFile(char * filename) {
 	/*for (int i = 0; i < numPolys; i++) {
 	cout << filepolys[i].firstp << ", " << filepolys[i].secondp << ", " << filepolys[i].thirdp << endl;
 	}*/
+	//cout << fileminX << ", " << fileminY << ", " << fileminZ << endl;
+	//cout << filemaxX << ", " << filemaxY << ", " << filemaxZ << endl;
 }
 
 void generateFileGeometry(void)
@@ -221,7 +237,9 @@ void generateFileGeometry(void)
 	// make function to go in here if it doesn't display try scaling ortho
 	// generate giant array or use glelements
 	readPLYFile(plyfiles[0]);
-
+	mat4 ortho = Ortho(fileminX, filemaxX, fileminY, filemaxY, filemaxZ, fileminZ);
+	GLuint ProjLoc = glGetUniformLocation(program, "Proj");
+	glUniformMatrix4fv(ProjLoc, 1, GL_TRUE, ortho);
 	// Create a vertex array object
 	GLuint vao;
 	glGenVertexArrays(1, &vao);
@@ -235,6 +253,10 @@ void generateFileGeometry(void)
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(filepoints), filepoints.data());
 	glBufferSubData(GL_ARRAY_BUFFER, sizeof(filepoints), sizeof(filecolors), filecolors.data());
 
+	GLuint elementbuffer;
+	glGenBuffers(1, &elementbuffer);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, fileindices.size() * sizeof(unsigned int), &fileindices[0], GL_STATIC_DRAW);
 
 	// Load shaders and use the resulting shader program
 	program = InitShader("vshader1.glsl", "fshader1.glsl");
